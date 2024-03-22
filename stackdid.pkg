@@ -1,0 +1,9 @@
+v 3
+d 'STACKDID': stacked difference-in-differences regression
+d [description]
+d [keywords -f {}.key]
+d [stata version]
+d [distribution date]
+d [authors, support]
+
+f stckdid.sthlp
