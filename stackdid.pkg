@@ -6,4 +6,5 @@ d [stata version]
 d [distribution date]
 d [authors, support]
 
-f stckdid.sthlp
+f stackdid.ado
+f stackdid.sthlp
