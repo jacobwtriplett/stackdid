@@ -17,7 +17,7 @@
 
 {p 8 20 2}
 {cmdab:stackdid}
-{depvar}
+[{depvar}]
 [{indepvars}]
 {ifin}
 {weight}
@@ -49,7 +49,10 @@ behavior is to use never-treated and not-yet-treated observations{p_end}
 {synopt:{opt nobuild}}do not build stacked data; proceed directly to regression{p_end}
 
 {synoptline}
-{p2coldent:* starred options are required}{p_end}
+{p2coldent:{cmd:by} is allowed; see {help prefix}.}{p_end}
+{p2coldent:for allowed weights, see {it:estimator}'s help file.}{p_end}
+{p2coldent:* starred options are required, unless {cmd:nobuild} is specified.}{p_end}
+
 {p2colreset}{...}
 
 
@@ -84,7 +87,10 @@ using {cmd:absorb()}.{p_end}
 {dlgtab:Main}
 
 {phang}
-{opth tr:eatment(varname)} is a binary (0,1) indicator that an observation is treated.
+{opth tr:eatment(varname)} is a binary (0,1) indicator that an observation is 
+treated;  for example, if a group is treated only in 2004, {it:varname} equals 1 
+in 2004 and 0 otherwise for observations in that group.  Missing values denote 
+unobserved treatment status and are allowed.
 
 {phang}
 {opth gr:oup(varname)} is the panelvar at which treatment occurs.
@@ -159,7 +165,7 @@ See {help stackdid##remarks:remarks} for the intended use case.
 {pstd}
 Practictioners often build upon a baseline specification with increasingly strict
 fixed effects and/or controls.  {cmd:stackdid} will always create the same stacks
-when the required options ({cmd:treatment()}, {cmd:group()}, {cmd:time()}, {cmd:window()}) and {cmd:nevertreat} are the same.  Thus, you can reduce redundant computation using the {cmd:clear} 
+when the required options ({cmd:treatment()}, {cmd:group()}, {cmd:time()}, {cmd:window()}) and {cmd:nevertreat} are the same.  Thus, one can reduce redundant computation using the {cmd:clear} 
 option in the first specification and the {cmd:nobuild} option in subsequent 
 specifications.{p_end}
 
@@ -168,7 +174,7 @@ specifications.{p_end}
 {title:Examples}
 
 {pstd}
-[todo: (1) subsequent specifications, using {cmd:clear} and {cmd:nobuild}; (2) triple-diff]
+[todo: (1) basic usage, (2) subsequent specifications, using {cmd:clear} and {cmd:nobuild}; (3) triple-diff]
 
 
 {marker results}{...}
