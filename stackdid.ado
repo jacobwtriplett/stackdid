@@ -1,24 +1,8 @@
-*! version 0.1 12apr2024
+*! version 0.5 25apr2024
 capture program drop stackdid
 program define stackdid, rclass byable(onecall)
         
 /* SYNTAX */
-        
-        /*if _by() { // needs testing
-                local BY `"by `_byvars'`_byrc0':"'
-        }
-        
-        if replay() {
-                if `"`e(cmd)'"'!="stackdid" { // stackdid is not eclass
-                        error 301
-                }
-                if _by() {
-                        error 190
-                }
-                Estimate `0' /* display results */
-                error `e(rc)'
-                exit  
-        }*/
         
         syntax [anything]               /*
         */      [aw fw pw iw] [if] [in] /*
