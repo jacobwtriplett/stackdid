@@ -50,7 +50,7 @@ program define stackdid, rclass byable(onecall)
         if ("`build'"=="") {
                 
                 * Assert treatment takes values {0,1,.}
-                capture assert inlist(`treatment',0,1,.) // if/in? 
+                capture assert inlist(`treatment',0,1,.) `if' `in'
                 if (_rc) { 
                         di as err "`treatment' is not a 0/1/. variable"
                         exit 450
