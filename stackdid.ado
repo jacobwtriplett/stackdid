@@ -4,7 +4,7 @@ program define stackdid, rclass byable(onecall)
         
 /* SYNTAX */
         
-        if _by() { // needs testing
+        /*if _by() { // needs testing
                 local BY `"by `_byvars'`_byrc0':"'
         }
         
@@ -18,10 +18,10 @@ program define stackdid, rclass byable(onecall)
                 Estimate `0' /* display results */
                 error `e(rc)'
                 exit  
-        }
+        }*/
         
-        syntax anything                 /*
-        */      [aw fw pw iw] [if] [in] /* what does if/in apply to?
+        syntax [anything]               /*
+        */      [aw fw pw iw] [if] [in] /*
         */      [,                      /*
         */      TReatment(varname numeric) /*
         */      GRoup(varname)          /*
@@ -29,11 +29,12 @@ program define stackdid, rclass byable(onecall)
         */      Window(string)          /*
         */      nevertreat              /*
         */      poisson                 /*
-        */      NOTABulate              /*
+        */      nobuild                 /*
+        */      noREGress               /*
+        */      noTABulate              /*
         */      clear                   /*
         */      saving(string)          /*
-        */      nobuild                 /*
-        */      NOREGress               /* UNDOCUMENTED (yet)
+        */      noLOG                   /* 
         */      absorb(varlist)         /* UNDOCUMENTED
         */      *                       /* estimator-specific options other than absorb()
         */      ]
@@ -47,10 +48,17 @@ program define stackdid, rclass byable(onecall)
         
         * Tabulate treatment panel
         if ("`tabulate'"=="") {
-                if ("`build'"=="") {
+                if ("`group'"!="" & "`time'"!="" & "`treatment'"!="") {
                         table (`group') (`time'), nototal statistic(firstnm `treatment')
                 }
-                else    table (`r(group)') (`r(time)'), nototal statistic(firstnm `r(treatment)')
+                else if ("`r(group)'`r(time)'`r(treatment)'"!="") {
+                        table (`r(group)') (`r(time)'), nototal statistic(firstnm `r(treatment)')
+                }
+                else    {
+                        di as error "for a tabulation of the treatment panel," /*
+                        */ " you must specify treatment(), group(), time() if" /*
+                        */ " stackdid is not the most recent command" as text _n
+                }
         }
         
 /* BUILD */
@@ -82,17 +90,21 @@ program define stackdid, rclass byable(onecall)
                 }
                 tempvar treat_prev treat_event nevertreated tostack treated latest_treat lost_treat gained_treat stacked
 
+                * Helper macros 
+                local ttype: type `time' // `time' datatype
+                if ("`log'"!="") local nolog "quietly" // suppress build log
+                if ("`if'"!="") local ampif = subinstr("`if'","if","&",1) // replace if w/ ampersand
+
                 * Find event times
                 sort `group' `time'
-                qui gen byte `treat_prev' = `treatment'[_n-1]==1 if (`group'[_n-1]==`group' & `time'[_n-1]!=`time')
-                qui replace  `treat_prev' = `treat_prev'[_n-1]==1 if (`treatment'==1 & missing(`treat_prev'))
-                qui gen byte `treat_event' = (`treatment'==1 & `treat_prev'!=1)
+                qui gen byte `treat_prev' = `treatment'[_n-1] if (`group'[_n-1]==`group' & `time'[_n-1]!=`time')
+                qui gen byte `treat_event' = (`treatment'==1 & `treat_prev'==0)
                 qui levelsof `time' if (`treat_event'==1), local(cohorts)
-                di _n as text "treatment cohorts: " as result "`cohorts'"
+                `nolog' di _n as text "treatment cohorts: " as result "`cohorts'"
                 drop `treat_prev'
                 
                 * Initialize cohort identifier and nevertreated identifier
-                qui gen __cohort = . // missing means original, nonmissing means stacked... (datatype to match `time'?)
+                qui gen __cohort = . // missing means original, nonmissing means stacked...
                 if ("`nevertreat'"!="") qui egen byte `nevertreated' = min(`treatment'==0), by(`group')
                 
                 * For each cohort...
@@ -103,27 +115,27 @@ program define stackdid, rclass byable(onecall)
                         if ("`nevertreat'"!="") qui replace `treated' = . if (`treated'==0 & `nevertreated'==0)
                         
                         * (1): grab everything within window of event
-                        qui gen byte `tostack' = inrange(`time', `pre'+`co', `post'+`co') if missing(__cohort) & !missing(`treated')
+                        qui gen byte `tostack' = inrange(`time', `pre'+`co', `post'+`co') if missing(__cohort) & !missing(`treated') `ampif' `in'
                         
                         * (2): remove latest treatment and prior
-                        qui egen byte `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack'==1 & `time'<`co')
+                        qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack'==1 & `time'<`co'), by(`group')
                         qui replace `tostack' = 0 if (`tostack'==1 & `time'<=`latest_treat' & !missing(`latest_treat'))
 
                         * (3): remove if treated group loses treatment status post-event
-                        qui egen byte `lost_treat' = min(cond(`treatment'==0,`time',.)) if (`treated'==1 & `co'<`time')
+                        qui egen `ttype' `lost_treat' = min(cond(`treatment'==0,`time',.)) if (`treated'==1 & `co'<`time'), by(`group')
                         qui replace `tostack' = 0 if (`treated'==1 & `lost_treat'<=`time' & !missing(`lost_treat'))
                         
                         * (4): remove if control group gains treatment status post-event
                         if ("`nevertreat'"=="") {
-                                qui egen byte `gained_treat' = min(cond(`treatment'==1,`time',.)) if (`treated'==0 & `co'<`time')
+                                qui egen `ttype' `gained_treat' = min(cond(`treatment'==1,`time',.)) if (`treated'==0 & `co'<=`time'), by(`group')
                                 qui replace `tostack' = 0 if (`treated'==0 & `gained_treat'<=`time' & !missing(`gained_treat'))
                                 drop `gained_treat'
                         }
 
                         * (5): create stack using -expand-
                         drop `treated' `latest_treat' `lost_treat'
-                        di as text "cohort " as result "`co'" as text " stacked " _cont
-                        expand 2 if (`tostack'==1), gen(`stacked')
+                        `nolog' di as text "cohort " as result "`co'" as text " stacked " _cont
+                        `nolog' expand 2 if (`tostack'==1), gen(`stacked')
                         qui replace __cohort = `co' if (`stacked'==1)
                         drop `tostack' `stacked'
                         
@@ -178,19 +190,17 @@ program define stackdid, rclass byable(onecall)
                 drop __cohort __cohort_time __cohort_group
         }
         
-/* RETURNS + MESSAGES
+/* RETURNS + MESSAGES */
 
         if ("`build'"=="") {
                 return local treatment "`treatment'"
                 return local group "`group'"
                 return local time "`time'"
                 return local window "`window'"
+                return scalar N_orig = `N_orig'
+                return scalar N_stacked = `N_stacked'
         }
         return local cmdline "stackdid `0'"
         if ("`regress'"=="") return local regline "e(cmdline)"
-        return scalar N_orig = `N_orig'
-        return scalar N_stacked = `N_stacked'
-        
-*/
         
 end
