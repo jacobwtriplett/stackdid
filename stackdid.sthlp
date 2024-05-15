@@ -29,7 +29,6 @@
 {syntab: Main}
 {p2coldent:* {opth tr:eatment(varname)}}binary treatment indicator{p_end}
 {p2coldent:* {opth gr:oup(varname)}}panelvar at which treatment occurs{p_end}
-{p2coldent:* {opth t:ime(varname)}}timevar at which treatment occurs{p_end}
 {p2coldent:* {opth w:indow(numlist)}}window of time to consider relative to treatment{p_end}
 {synopt:{opt nevertreat}}use only never-treated observations as controls; default
 behavior is to use never-treated and not-yet-treated observations{p_end}
@@ -43,7 +42,6 @@ behavior is to use never-treated and not-yet-treated observations{p_end}
 {cmd:poisson} specified{p_end}
 
 {syntab: Display}
-{synopt:{opt notab:ulate}}do not display tabulation of treatment panel{p_end}
 {synopt:{opt nolog}}do not display build log{p_end}
 
 {syntab: Saving}
@@ -77,9 +75,9 @@ and perform the specified regression.  The typical specification is{p_end}
 
 {pstd}
 where d_{ict} is a treatment indicator, {\delta}_{ct} is a cohort-time fixed effect,
-and {\alpha}_{ic} is a group-cohort fixed effect.  Since {cmd:stackdid} creates 
+and {\alpha}_{ic} is a unit-cohort fixed effect.  Since {cmd:stackdid} creates 
 the stacks of cohorts, it also creates the cohort-time fixed effect and the 
-group-cohort fixed effect; the user may specify additional fixed effects 
+unit-cohort fixed effect; the user may specify additional fixed effects 
 using {cmd:absorb()}.{p_end}
 
 
@@ -95,14 +93,15 @@ in 2004 and 0 otherwise for observations in that group.  Missing values are
 allowed and denote unobserved treatment status.
 
 {phang}
-{opth gr:oup(varname)} is the panelvar at which treatment occurs.
+{opth gr:oup(varname)} is the panelvar at which treatment occurs.  This need not 
+be the same panelvar as set in {cmd:xtset}; for example, if treatment is 
+determined at the state-year level, specify {cmd:group(state)}, even if the data 
+are at the firm-year level.
 
 {phang}
-{opth t:ime(varname)} is the timevar at which treatment occurs.
-
-{phang}
-{opth w:indow(numlist)} is the window of time (relative to treatment) to include in a stack; for example, {cmd:window(-10 10)} specifies ten years before and after treatment.  However, not 
-all cohort observations in this window will 
+{opth w:indow(numlist)} is the window of time (relative to treatment) to include 
+in a stack; for example, {cmd:window(-10 10)} specifies ten units before and 
+after treatment.  However, not all cohort observations in this window will 
 necessarily enter the stack: first, a treated group exits the stack if its 
 treatment status subsequently turns off again.  Second, a control group exits 
 the stack if it becomes treated (or, if {cmd:nevertreat} is specified, such 
@@ -147,12 +146,6 @@ see their help files for full documentation.{p_end}
 {dlgtab:Display}
 
 {phang}
-{opt notab:ulate} suppress printing to the console a tabulation of treatment 
-across {it:group} and {it:time}.  Such a tabulation can be a useful data 
-visualization (both before and after building stacked data), but is unweildy for 
-many groups and long ranges of time.
-
-{phang}
 {opt nolog} suppresses printing to console a build log.
 
 {dlgtab:Saving}
@@ -173,15 +166,13 @@ is not specified, the original data in memory are restored after estimation.
 {title:Remarks}
 
 {pstd}
-{cmd:stackdid} has three primary features.  Options are provided to isolate any
-one or two of these. If all three of these options are specified, {cmd:stackdid} 
-does nothing.
+{cmd:stackdid} has two primary features.  Options are provided to isolate either 
+of these.  If both of these options are specified, {cmd:stackdid} does nothing.
 
 {phang2}{space 4}{it:feature}{space 32}{it:optionally off}{p_end}
 {phang2}{hline 57}{p_end}
-{phang2}(1) tabulate treatment panel to console{space 4}{opt notab:ulate}{p_end}
-{phang2}(2) build stacked data{space 21}{opt nobuild}{p_end}
-{phang2}(3) perform specified regression{space 11}{opt noreg:ress}{p_end}
+{phang2}(1) build stacked data{space 21}{opt nobuild}{p_end}
+{phang2}(2) perform specified regression{space 11}{opt noreg:ress}{p_end}
 {phang2}{hline 57}{p_end}
 
 {pstd}
@@ -209,21 +200,22 @@ autoregressive component persistent in continuous treatment, encouraging the
 application of {cmd:stackdid}.  A window of five years before and after 
 treatment events is to be specified.
 
-{pstd}Load the example data{p_end}
+{pstd}Load the example data and apply {cmd:xtset}{p_end}
 {phang2}{cmd:. use stackdid_example, clear}{p_end}
+{pahng2}{cmd:. xtset id year}
 
 {pstd}Basic usage{p_end}
-{phang2}{cmd:. stackdid y treatment, tr(treatment) gr(group) t(time) w(-5 5)}{p_end}
+{phang2}{cmd:. stackdid y treatment, tr(treatment) gr(group) w(-5 5)}{p_end}
 
 {pstd}Subsequent specifications{p_end}
-{phang2}{cmd:. stackdid y treatment, tr(treatment) gr(group) t(time) w(-5 5) clear}{p_end}
+{phang2}{cmd:. stackdid y treatment, tr(treatment) gr(group) w(-5 5) clear}{p_end}
 {phang2}{cmd:. stackdid y treatment, nobuild absorb({it:some_fe})}{p_end}
 
 {pstd}Triple difference{p_end}
 {phang2}{cmd:. }{it:todo}{p_end}
 
 {pstd}If {opt group()} is needed for {it:estimator}{p_end}
-{phang2}{cmd:. stackdid, tr(treatment) gr(group) t(time) w(-5 5) clear noreg}{p_end}
+{phang2}{cmd:. stackdid, tr(treatment) gr(group) w(-5 5) clear noreg}{p_end}
 {phang2}{cmd:. {it:estimator} y treatment, group(...)}{p_end}
 
 
@@ -243,7 +235,6 @@ treatment events is to be specified.
 {synopt:{cmd:r(regline)}}command fed to {it:estimator} (also see {cmd:e(cmdline)}){p_end}
 {synopt:{cmd:r(treatment)}}treatment variable{p_end}
 {synopt:{cmd:r(group)}}group variable{p_end}
-{synopt:{cmd:r(time)}}time variable{p_end}
 {synopt:{cmd:r(window)}}window numlist{p_end}
 
 {pstd}
@@ -255,6 +246,12 @@ See {it:estimator}'s help file for results stored in {cmd:e()}.
 {pstd}Jacob Triplett{p_end}
 {pstd}Carnegie Mellon University{p_end}
 {pstd}jacobtri@andrew.cmu.edu{p_end}
+
+
+{title:Acknowledgments}
+
+{pstd}I wish to thank Todd Gormley for the inspiration to develop this package,
+and Todd Gormley and David Matsa for invaluable guidance during its development.{p_end}
 
 
 {marker references}{...}
