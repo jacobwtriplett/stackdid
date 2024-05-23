@@ -71,12 +71,12 @@ staggered treatment settings, as described in Gormley and Matsa (2011).  It offe
 of "cohorts" centered on treatment events.  {cmd:stackdid} will create these stacks 
 and perform the specified regression.  The typical specification is{p_end}
 
-{phang2} y_{ict} = {\beta}d_{ict} + {\delta}_{ct} + {\alpha}_{ic} + u_{ict} {p_end}
+{phang2}y = beta*D + delta + alpha + epsilon{p_end}
 
 {pstd}
-where d_{ict} is a treatment indicator, {\delta}_{ct} is a cohort-time fixed effect,
-and {\alpha}_{ic} is a unit-cohort fixed effect.  Since {cmd:stackdid} creates 
-the stacks of cohorts, it also creates the cohort-time fixed effect and the 
+where D is a treatment indicator, delta is a cohort-time fixed effect,
+and alpha is a unit-cohort fixed effect, and epsilon is a random disturbance.  
+Since {cmd:stackdid} creates the stacks of cohorts, it also creates the cohort-time fixed effect and the 
 unit-cohort fixed effect; the user may specify additional fixed effects 
 using {cmd:absorb()}.{p_end}
 
@@ -100,8 +100,8 @@ are at the firm-year level.
 
 {phang}
 {opth w:indow(numlist)} is the window of time (relative to treatment) to include 
-in a stack; for example, {cmd:window(-10 10)} specifies ten units before and 
-after treatment.  However, not all cohort observations in this window will 
+in a stack.  For example, {cmd:window(-10 10)} specifies that a 2004 cohort 
+consists of 1994-2013 data.  However, not all cohort observations in this window will 
 necessarily enter the stack: first, a treated group exits the stack if its 
 treatment status subsequently turns off again.  Second, a control group exits 
 the stack if it becomes treated (or, if {cmd:nevertreat} is specified, such 
@@ -178,7 +178,8 @@ of these.  If both of these options are specified, {cmd:stackdid} does nothing.
 {pstd}
 Practictioners often build upon a baseline specification with increasingly strict
 fixed effects and/or controls.  {cmd:stackdid} will always create the same stacks
-when the required options ({cmd:treatment()}, {cmd:group()}, {cmd:time()}, {cmd:window()}) and {cmd:nevertreat} are the same.  Thus, one can reduce redundant computation using the {cmd:clear} 
+when the required options ({cmd:treatment()}, {cmd:group()}, {cmd:window()}) and 
+{cmd:nevertreat} are the same.  Thus, one can reduce redundant computation using the {cmd:clear} 
 option in the first specification and the {cmd:nobuild} option in subsequent 
 specifications.
 
@@ -193,30 +194,34 @@ stacks in memory, adjacent to the original data.  The consequence is that
 {title:Examples}
 
 {pstd}
-An example dataset is included in the {cmd:stackdid} package.  Half of the fifty 
-groups are initially assigned 'treated' status, and every four years a group 
-changes treatment status with probability 0.25.  The outcome variable has an 
-autoregressive component persistent in continuous treatment, encouraging the 
-application of {cmd:stackdid}.  A window of five years before and after 
-treatment events is to be specified.
+An example dataset is supplied.  In it, a balanced panel of 500 fictional firms 
+({it:firm_id}) in 2000-2011 are divided into eleven groups 
+({it:sector}) with three treatment events.  The outcome variable ({it:y}) has 
+an autoregressive component persistent in continuous treatment, 
+encouraging the application of {cmd:stackdid}.  The sample of firms is bisected
+by characteristic {it:char}.  A window of three years before 
+and after treatment events is to be specified.
 
 {pstd}Load the example data and apply {cmd:xtset}{p_end}
-{phang2}{cmd:. use stackdid_example, clear}{p_end}
-{pahng2}{cmd:. xtset id year}
+{phang2}{cmd:. use https://raw.githubusercontent.com/jacobwtriplett/stackdid/main/stackdid_example}{p_end}
+{phang2}{cmd:. xtset firm_id year}
 
 {pstd}Basic usage{p_end}
-{phang2}{cmd:. stackdid y treatment, tr(treatment) gr(group) w(-5 5)}{p_end}
+{phang2}{cmd:. stackdid y treatXpost, tr(treatXpost) gr(sector) w(-3 3)}{p_end}
 
 {pstd}Subsequent specifications{p_end}
-{phang2}{cmd:. stackdid y treatment, tr(treatment) gr(group) w(-5 5) clear}{p_end}
-{phang2}{cmd:. stackdid y treatment, nobuild absorb({it:some_fe})}{p_end}
+{phang2}{cmd:. stackdid y treatXpost, tr(treatXpost) gr(sector) w(-3 3) clear}{p_end}
+{phang2}{cmd:. stackdid y treatXpost, nobuild absorb(firm_id)}{p_end}
 
 {pstd}Triple difference{p_end}
-{phang2}{cmd:. }{it:todo}{p_end}
+{phang2}{cmd:. stackdid y treatXpost treatXpostXchar, nobuild absorb(year#char)}{p_end}
 
 {pstd}If {opt group()} is needed for {it:estimator}{p_end}
-{phang2}{cmd:. stackdid, tr(treatment) gr(group) w(-5 5) clear noreg}{p_end}
-{phang2}{cmd:. {it:estimator} y treatment, group(...)}{p_end}
+{phang2}{cmd:. stackdid, tr(treatXpost) gr(sector) w(-3 3) clear noreg}{p_end}
+{phang2}{cmd:. {it:estimator} y treatXpost, group(...)}{p_end}
+
+{pstd}Suggested: visually decompose cohorts{p_end}
+{phang2}{cmd:. table (sector) (year) (_cohort), statistic(firstnm treatXpost) nototal}{p_end}
 
 
 {marker results}{...}
@@ -277,3 +282,5 @@ ISSN 0304-405X,
 https://doi.org/10.1016/j.jfineco.2016.08.002.
 {p_end}
 
+{phang}
+Todd A. Gormley, Manish Jha, and Meng Wang, The Politicization of Social Responsibility (March 11, 2024). Available at SSRN: https://ssrn.com/abstract=4558097{p_end}

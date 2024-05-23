@@ -1,6 +1,6 @@
-*! version 1.0 15may2024
+*! version 1.0 23may2024
 capture program drop stackdid
-program define stackdid, rclass byable(onecall)
+program define stackdid, rclass
         version 11
         
 /* SYNTAX */
@@ -18,10 +18,10 @@ program define stackdid, rclass byable(onecall)
         */      clear                   /*
         */      saving(string)          /*
         */      noLOG                   /* 
-        */      absorb(varlist)         /* UNDOCUMENTED
+        */      absorb(varlist fv)      /* UNDOCUMENTED
         */      *                       /* estimator-specific options other than absorb()
         */      ]
-   
+  
         * Confirm required options, or nobuild, specified
         if ("`treatment'"=="" | "`group'"=="" | "`window'"=="") & ("`build'"=="") {
                 di as err "options treatment(), group(), and window() " ///
@@ -51,7 +51,7 @@ program define stackdid, rclass byable(onecall)
 
                 * Parse window()
                 gettoken pre post: window
-                capture assert `pre'<`post' & inrange(0,`pre',`post')
+                capture assert `pre'<`post' & inrange(0,`pre',`post'-1)
                 if (_rc) {
                         di as err "option window() specified incorrectly"
                         exit 198
@@ -69,6 +69,7 @@ program define stackdid, rclass byable(onecall)
 
                 * Helper macros 
                 local ttype: type `time' // `time' datatype
+                local tfmt : format `time' // `time' format
                 if ("`log'"!="") local nolog "quietly" // suppress build log
                 if ("`if'"!="") local ampif = subinstr("`if'","if","&",1) // replace if w/ ampersand
 
@@ -93,7 +94,7 @@ program define stackdid, rclass byable(onecall)
                         if ("`nevertreat'"!="") qui replace `treated' = . if (`treated'==0 & `nevertreated'==0)
 
                         * (1): grab everything within window of event
-                        qui gen byte `tostack' = inrange(`time', `pre'+`co', `post'+`co') if missing(_cohort) & !missing(`treated') `ampif' `in'
+                        qui gen byte `tostack' = inrange(`time',`pre'+`co',`post'+`co'-1) if missing(_cohort) & !missing(`treated') `ampif' `in'
 
                         * (2): remove latest treatment and prior
                         qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack'==1 & `time'<`co'), by(`group')
@@ -123,6 +124,7 @@ program define stackdid, rclass byable(onecall)
                 qui egen _cohort_unit = group(_cohort `unit') if !missing(_cohort), autotype 
                 
                 * Label saved (non-temporary) variables 
+                format _cohort `tfmt'
                 label var _cohort "treatment cohort, identified by time of treatment, from -stackdid-"
                 label var _cohort_time "cohort-time fixed effect, from -stackdid-"
                 label var _cohort_unit "unit-cohort fixed effect, from -stackdid-"
@@ -175,5 +177,7 @@ program define stackdid, rclass byable(onecall)
                 return scalar N_stacked = `N_stacked'
         }
         return local cmdline "stackdid `0'"
-        
 end
+
+* Note. The author recommends visually decomposing stacked data:
+* table (`group') (`time') (_cohort), nototal statistic(firstnm `treatment')
