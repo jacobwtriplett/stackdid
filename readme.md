@@ -81,7 +81,7 @@ reghdfe  y x1 x2 x3, absorb(w1#w2) cluster(w1)
 stackdid y x1 x2 x3, absorb(w1#w2) cluster(w1) tr(x1) gr(g1)
 ```
 
-An example dataset is supplied. In it, a balanced panel of 500 fictional firms (firm_id) in 2000-2011 are divided into eleven groups (sector) with three treatment events. The outcome variable (y) has an autoregressive component persistent in continuous treatment, encouraging the application of stackdid. The sample of firms is bisected by characteristic char. A window of three years before and after treatment events is to be specified.
+Specific examples are illustrated using simulated data. In it, a balanced panel of 500 fictional firms (firm_id) in 2000-2011 are divided into eleven groups (sector) with three treatment events. The outcome variable (y) has an autoregressive component persistent in continuous treatment, encouraging the application of stackdid. The sample of firms is bisected by characteristic char. A window of three years before and after treatment events is to be specified.
 
 ```stata
 * Load the example data and apply xtset
