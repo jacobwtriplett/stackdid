@@ -4,7 +4,7 @@ A Stata command that performs stacked difference-in-differences regression for s
 
 ## Key Features
 
-- Not subject to earlier bias from dynamic effects
+- Not subject to bias from dynamic effects
 - Can easily isolate a particular window of interest around each event
 - Can easily be extended into a triple-difference specification
 
