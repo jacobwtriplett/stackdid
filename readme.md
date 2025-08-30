@@ -22,7 +22,7 @@ stackdid [depvar] [indepvars] [if] [in] [weight] [, options]
 
 ### Main Options
 
-* **treatment(varname)** - *(required)* A binary (0,1) indicator that an observation is treated in a given period; for example, if a group is treated only in 2004, varname equals 1 in 2004 and 0 otherwise for observations in that group. Missing values are allowed and denote unobserved treatment status.
+* **treatment(varname)** - *(required)* A binary (0,1) indicator that an observation is treated in a given period; for example, if a group is treated only in 2004, varname equals 1 in 2004 and 0 otherwise for observations in that group.
 
 * **group(varname)** - *(required)* The panelvar at which treatment occurs. This need not be the same panelvar as set in xtset; for example, if treatment is determined at the state-year level, specify group(state), even if the data are at the firm-year level.
 
