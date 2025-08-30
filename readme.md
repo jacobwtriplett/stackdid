@@ -1,6 +1,6 @@
 # stackdid: Stacked Difference-in-Differences Regression
 
-A Stata command that performs stacked difference-in-differences regression for staggered treatment settings, as described in [Gormley and Matsa (2011)](https://doi.org/10.1093/rfs/hhr011). This method offers three primary advantages compared to a standard difference-in-differences approach in such settings:
+A Stata command that performs stacked difference-in-differences regression for staggered treatment settings, as described in [Gormley and Matsa (2011, 2016)](https://doi.org/10.1093/rfs/hhr011). This method offers three primary advantages compared to a standard difference-in-differences approach in such settings:
 
 1. Not subject to earlier bias from dynamic effects
 2. Can easily isolate a particular window of interest around each event
@@ -32,7 +32,7 @@ stackdid [depvar] [indepvars] [if] [in] [weight] [, options]
 
 * **nevertreat** - Specifies that only never-treated groups be controls. This reduces the number of groups eligible to be used as controls, or has no effect. If this is not specified, controls consist of never-treated groups and not-yet-treated groups.
 
-* **absorb(varlist)** - Fixed effects to be absorbed
+* **absorb(varlist)** - Fixed effects to be absorbed within cohorts. This means fixed effects in varlist are interacted with the cohort identifier _cohort. If this option is omitted, _cohort becomes the only fixed effect. Factor variables are allowed in varlist.
 
 * **sw** - applies a sample weighting scheme. This adjusts for the repeated use of control units by weighting each observation by the inverse of its frequency in the stacked sample.
 
@@ -64,6 +64,8 @@ Linear regressions and Poisson regressions are allowed by stackdid thanks to the
 
 ## Remarks
 
+**Treatment Types**: Treatment may be considered permanent or impermanent. In the case of Gormley & Matsa (2011), treatment is permanent, meaning it remains on once on. For data like this, stackdid executes exactly as described in that paper. In the case of Gormley & Matsa (2016), treatment is impermanent, meaning it may turn off after being on. Once again, stackdid executes exactly as described in that paper, and issues the notice "impermanent treatment detected". There is no need to tell stackdid what type the data are—it is automatically detected. Finally, in the most general case of impermanent treatment (where treatment may turn on and off any number of times), stackdid executes in the style of the papers above, selecting valid pre and post observations for each treatment event.
+
 stackdid has two primary features. Options are provided to isolate either of these. If both of these options are specified, stackdid does nothing.
 
 | Feature | Optionally Off |
@@ -73,6 +75,8 @@ stackdid has two primary features. Options are provided to isolate either of the
 
 Practitioners often build upon a baseline specification with increasingly strict fixed effects and/or controls. stackdid will always create the same stacks when the required options (treatment() and group()), window() and nevertreat are the same. Thus, one can reduce redundant computation using the clear option in the first specification and the nobuild option in subsequent specifications.
 
+stackdid requires the data to be a panel set by xtset. There is no requirement to be strongly balanced.
+
 ## Examples
 
 Generically, adapting specifications to stacked regressions can be as simple as replacing reghdfe (or ppmlhdfe) with stackdid and specifying the two required options, treatment() and group().
@@ -81,7 +85,7 @@ reghdfe  y x1 x2 x3, absorb(w1#w2) cluster(w1)
 stackdid y x1 x2 x3, absorb(w1#w2) cluster(w1) tr(x1) gr(g1)
 ```
 
-Specific examples are illustrated using simulated data. In it, a balanced panel of 500 fictional firms (firm_id) in 2000-2011 are divided into eleven groups (sector) with three treatment events. The outcome variable (y) has an autoregressive component persistent in continuous treatment, encouraging the application of stackdid. The sample of firms is bisected by characteristic char. A window of three years before and after treatment events is to be specified.
+Specific examples are illustrated using simulated data. In it, a balanced panel of 500 fictional firms (firm_id) in 2000-2011 are divided into eleven groups (sector) with three treatment events. The outcome variable (y) has an autoregressive component persistent in continuous treatment, encouraging the application of stackdid. The sample of firms is bisected by binary characteristic char. A window of three years before and after treatment events is to be specified.
 
 ```stata
 * Load the example data and apply xtset
@@ -111,7 +115,7 @@ table (sector) (year) (_cohort), statistic(firstnm treatXpost) nototal
 stackdid stores the following in r():
 
 ### Scalars
-* r(N_orig) - Number of observations in original data
+* r(N_original) - Number of observations in original data
 * r(N_stacked) - Number of observations in stacked data (also see e(N))
 
 ### Macros
