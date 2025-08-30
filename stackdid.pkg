@@ -6,7 +6,7 @@ d Authors: Jacob Triplett
 d Support: Jacob Triplett at jacob_triplett@kenan-flagler.unc.edu
 d
 d stackdid performs a stacked difference-in-differences regression for staggered treatment 
-d settings, as described in Gormley and Matsa (2011).  It offers three primary advantages 
+d settings, as described in Gormley and Matsa (2011, 2016).  It offers three primary advantages 
 d compared to a standard difference-in-differences approach in such settings:
 d        (1) is not subject to earlier bias from dynamic effects
 d        (2) can easily isolate a particular window if interest around each event
@@ -22,11 +22,11 @@ d KW: difference-in-differences
 d KW: did
 d KW: xtdidregress
 d
-d Requires Stata version 11.2
+d Requires Stata version 15
 d
 d Required packages: reghdfe, ppmlhdfe
 d
-d Distribution date: 17feb2025
+d Distribution date: 27aug2025
 d
 
 f stackdid.ado
