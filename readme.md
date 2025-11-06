@@ -108,6 +108,12 @@ estimator y treatXpost, group(...)
 
 * Suggested: visually decompose cohorts
 table (sector) (year) (_cohort), statistic(firstnm treatXpost) nototal
+
+* Subsetting via [if] [in] applies *before* identifying cohorts. 
+* Accordingly, be aware that nevertreat is identified within-subset. 
+* If you want nevertreat identified on all data but only to regress a subset, then proceed in two steps:
+stackdid, ... nevertreat noreg clear
+stackdid ... [if] [in], nobuild
 ```
 
 ## Stored Results
@@ -139,6 +145,8 @@ jacob_triplett@kenan-flagler.unc.edu
 I wish to thank Todd Gormley for the inspiration to develop this package, and Todd Gormley and David Matsa for invaluable guidance during its development.
 
 ## References
+
+If you use this program in your research, please cite its SSRN entry ("https://papers.ssrn.com/abstract=5421535").
 
 - Sergio Correia, Paulo Guimarães, Thomas Zylkin: "ppmlhdfe: Fast Poisson Estimation with High-Dimensional Fixed Effects", 2019; arXiv:1903.01690.
 
