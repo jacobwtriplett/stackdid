@@ -26,7 +26,7 @@ d Requires Stata version 15
 d
 d Required packages: reghdfe, ppmlhdfe
 d
-d Distribution date: 27aug2025
+d Distribution date: 06nov2025
 d
 
 f stackdid.ado
